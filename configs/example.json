@@ -1,0 +1,35 @@
+{
+  "id": "my_tool",
+  "name": "My Tool",
+  "description": "Example MCP server configuration",
+  "enabled": true,
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8101,
+    "endpoint": "/mcp"
+  },
+  "runtime": {
+    "venv_mode": "shared",
+    "python": "shared"
+  },
+  "install": {
+    "dependencies": [
+      "requests>=2.28.0"
+    ],
+    "requirements_file": null,
+    "install_on_upload": true,
+    "upgrade": false
+  },
+  "tool_source": {
+    "type": "openwebui_json",
+    "path": "./tools/my_tool.json"
+  },
+  "values": {
+    "api_url": "https://api.example.com",
+    "api_key": ""
+  },
+  "lifecycle": {
+    "auto_start": false,
+    "restart_on_change": true
+  }
+}

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCP Manager</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" crossorigin="anonymous" />
+</head>
+<body>
+  <header>
+    <div class="header-title">
+      <span class="logo">⬡</span>
+      <h1>MCP Manager</h1>
+    </div>
+    <button class="btn btn-secondary" id="editor-btn">+ New Tool</button>
+    <button class="btn btn-primary" id="upload-btn">+ Upload JSON</button>
+    <button class="btn btn-ghost btn-settings" id="settings-btn" title="Manager Settings">⚙</button>
+  </header>
+
+  <main>
+    <div id="alert-area"></div>
+
+    <div class="table-wrapper">
+      <table id="instances-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Port</th>
+            <th>URL</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="instances-body">
+          <tr class="empty-row">
+            <td colspan="6">No MCP instances yet. Upload a JSON to get started.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Upload Modal -->
+  <div id="upload-modal" class="modal hidden">
+    <div class="modal-backdrop" id="upload-backdrop"></div>
+    <div class="modal-content">
+      <h2>Upload & Install JSON</h2>
+      <p class="modal-hint">Upload an <strong>OpenWebUI tool JSON</strong> or a full <strong>MCP config JSON</strong>.</p>
+      <div class="file-drop" id="file-drop">
+        <span id="file-label">Drop file here or click to select</span>
+        <input type="file" id="file-input" accept=".json" />
+      </div>
+      <div id="upload-progress" class="hidden">
+        <div class="spinner"></div>
+        <span id="upload-status-text">Installing...</span>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="upload-submit" disabled>Install</button>
+        <button class="btn btn-ghost" id="upload-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-backdrop" id="edit-backdrop"></div>
+    <div class="modal-content modal-wide">
+      <h2>Edit <span id="edit-title"></span></h2>
+      <form id="edit-form">
+        <div class="form-grid">
+          <label>Name</label>
+          <input type="text" id="edit-name" />
+
+          <label>Host</label>
+          <input type="text" id="edit-host" />
+
+          <label>Port</label>
+          <input type="number" id="edit-port" min="1024" max="65535" />
+
+          <label>Endpoint</label>
+          <input type="text" id="edit-endpoint" />
+
+          <label>Enabled</label>
+          <input type="checkbox" id="edit-enabled" />
+
+          <label>Auto Start</label>
+          <input type="checkbox" id="edit-autostart" />
+        </div>
+
+        <h3>Values</h3>
+        <div id="edit-values-container"></div>
+
+        <h3>Dependencies</h3>
+        <textarea id="edit-deps" rows="4" placeholder="requests>=2.31.0&#10;pydantic>=2.0.0"></textarea>
+      </form>
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="edit-save">Save</button>
+        <button class="btn btn-warning" id="edit-save-restart">Save & Restart</button>
+        <button class="btn btn-ghost" id="edit-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Modal -->
+  <div id="logs-modal" class="modal hidden">
+    <div class="modal-backdrop" id="logs-backdrop"></div>
+    <div class="modal-content modal-wide">
+      <div class="logs-header">
+        <h2>Logs: <span id="logs-title"></span></h2>
+        <div class="log-tabs">
+          <button class="tab active" id="tab-install" data-tab="install">Install Log</button>
+          <button class="tab" id="tab-runtime" data-tab="runtime">Runtime Log</button>
+        </div>
+      </div>
+      <pre id="log-content" class="log-content">Loading...</pre>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="logs-refresh">Refresh</button>
+        <button class="btn btn-ghost" id="logs-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal hidden">
+    <div class="modal-content modal-login">
+      <div class="login-logo">⬡</div>
+      <h2>MCP Manager</h2>
+      <p class="modal-hint">Enter the manager password to continue.</p>
+      <form id="login-form" autocomplete="on">
+        <input type="password" id="login-password" placeholder="Password" autocomplete="current-password" />
+        <div id="login-error" class="login-error hidden">Wrong password</div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Unlock</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tool Editor Modal -->
+  <div id="editor-modal" class="modal hidden">
+    <div class="modal-backdrop" id="editor-backdrop"></div>
+    <div class="modal-content modal-editor">
+      <div class="editor-header">
+        <h2>Tool Editor</h2>
+        <button class="btn-icon" id="editor-close" title="Close">✕</button>
+      </div>
+
+      <div class="editor-meta">
+        <div class="meta-field">
+          <label>ID</label>
+          <input type="text" id="editor-id" placeholder="my_weather_tool" />
+        </div>
+        <div class="meta-field meta-field-grow">
+          <label>Name</label>
+          <input type="text" id="editor-name" placeholder="My Weather Tool" />
+        </div>
+        <div class="meta-field meta-field-grow2">
+          <label>Description</label>
+          <input type="text" id="editor-desc" placeholder="Fetches current weather data" />
+        </div>
+      </div>
+
+      <div class="editor-body">
+        <div class="editor-pane">
+          <textarea id="editor-code"></textarea>
+        </div>
+        <div class="editor-results hidden" id="editor-results">
+          <div class="results-header">
+            <span id="results-badge" class="badge">–</span>
+            <span id="results-summary"></span>
+          </div>
+          <div id="results-errors" class="results-section hidden">
+            <h4>Errors</h4>
+            <ul id="errors-list"></ul>
+          </div>
+          <div id="results-warnings" class="results-section hidden">
+            <h4>Warnings</h4>
+            <ul id="warnings-list"></ul>
+          </div>
+          <div id="results-tools" class="results-section hidden">
+            <h4>Detected Tools</h4>
+            <ul id="tools-list"></ul>
+          </div>
+          <div id="results-valves" class="results-section hidden">
+            <h4>Valves (Config)</h4>
+            <pre id="valves-pre"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="editor-validate" title="Runs the code server-side to inspect the Tools class. Only validate code you trust.">Validate</button>
+        <button class="btn btn-primary" id="editor-export">Export JSON</button>
+        <button class="btn btn-success" id="editor-install">Install as MCP</button>
+        <button class="btn btn-ghost" id="editor-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-backdrop" id="settings-backdrop"></div>
+    <div class="modal-content modal-wide">
+      <h2>Manager Settings</h2>
+
+      <div class="settings-section">
+        <h3 class="settings-section-title">Security</h3>
+        <div class="settings-status" id="settings-auth-status"></div>
+        <div class="form-grid">
+          <label id="settings-current-pw-label">Current Password</label>
+          <input type="password" id="settings-pw-current" autocomplete="current-password" placeholder="Required to change password" />
+          <label>New Password</label>
+          <input type="password" id="settings-pw1" autocomplete="new-password" placeholder="Leave blank to keep current" />
+          <label>Confirm Password</label>
+          <input type="password" id="settings-pw2" autocomplete="new-password" placeholder="" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-section-title">Edit Mode</h3>
+        <div class="form-grid">
+          <label>Mode</label>
+          <select id="settings-edit-mode">
+            <option value="full">Full — all editing enabled</option>
+            <option value="upload">Upload-only — no inline code editor</option>
+            <option value="readonly">Read-only — no changes via web UI</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="settings-section-title">MCP Endpoint Authentication</h3>
+        <div class="settings-status" id="settings-mcp-status"></div>
+        <div class="form-grid" id="settings-mcp-fields">
+          <label>Bearer Token</label>
+          <div class="token-input-wrap">
+            <input type="password" id="settings-mcp-token" autocomplete="off"
+                   placeholder="No token set" />
+            <button type="button" class="btn btn-ghost btn-token-toggle" id="settings-mcp-toggle"
+                    title="Show / hide token">👁</button>
+            <button type="button" class="btn btn-ghost btn-token-toggle" id="settings-mcp-generate"
+                    title="Generate secure token">⟳</button>
+          </div>
+          <label></label>
+          <label class="checkbox-label">
+            <input type="checkbox" id="settings-mcp-clear" />
+            Remove token (disable MCP authentication)
+          </label>
+        </div>
+        <div id="settings-mcp-locked" class="settings-locked hidden">
+          MCP token editing is disabled on this server (<code>--no-token-edit</code>).
+        </div>
+      </div>
+
+      <div class="settings-section settings-section-last">
+        <h3 class="settings-section-title">Server</h3>
+        <div class="settings-info-row">
+          <span class="settings-label">Host</span>
+          <code id="settings-host">—</code>
+          <span class="settings-label">Port</span>
+          <code id="settings-port">—</code>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="settings-save">Save Settings</button>
+        <button class="btn btn-danger" id="settings-restart">Restart Manager</button>
+        <button class="btn btn-ghost" id="settings-cancel">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js" crossorigin="anonymous"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

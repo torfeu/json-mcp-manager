@@ -1,0 +1,21 @@
+[Unit]
+Description=MCP Manager
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/home/YOUR_USER/mcp-manager
+
+# Add --no-edit to block all code/config editing (read-only UI).
+# Add --no-code-edit to allow JSON uploads but block the inline code editor.
+ExecStart=/home/YOUR_USER/mcp-manager/.venv/bin/python app/manager.py --host 0.0.0.0
+
+# Load password and other secrets from a separate file (not committed to git)
+EnvironmentFile=/etc/mcp-manager.env
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
