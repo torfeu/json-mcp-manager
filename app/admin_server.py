@@ -32,7 +32,7 @@ from .tool_loader import load_openwebui_json
 
 logger = get_manager_logger()
 
-app = FastAPI(title="MCP Manager", version="0.1.0")
+app = FastAPI(title="MCP Manager", version="0.0.5")
 
 
 def require_upload_or_edit() -> None:

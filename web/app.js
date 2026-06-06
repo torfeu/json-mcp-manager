@@ -796,6 +796,14 @@ async function loadSettingsData() {
 
     document.getElementById("settings-host").textContent = data.host || "—";
     document.getElementById("settings-port").textContent = data.port || "—";
+    const hints = {
+      "0.0.0.0": "All network interfaces — reachable from other machines",
+      "127.0.0.1": "Localhost only — not reachable from other machines",
+      "localhost":  "Localhost only — not reachable from other machines",
+    };
+    const hint = document.getElementById("settings-bind-hint");
+    hint.textContent = hints[data.host] || "";
+    hint.style.display = hint.textContent ? "" : "none";
   } catch (e) {
     showAlert("error", "Could not load settings: " + e.message);
   }

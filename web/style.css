@@ -726,6 +726,12 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12px; }
   color: var(--text-muted);
 }
 
+.settings-bind-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
 .settings-locked {
   font-size: 13px;
   color: var(--text-muted);

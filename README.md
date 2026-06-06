@@ -39,7 +39,7 @@ MCP endpoints are then reachable at `http://<your-ip>:<port>/mcp`.
 
 ## Settings page
 
-The web UI includes a **⚙ Settings** page (top-right button) for managing all framework options without restarting:
+The web UI includes a **⚙ Settings** page (top-right button) for managing common runtime options:
 
 - **Password** — set or change the manager password (requires current password if one is already set); persisted as SHA-256 hash in `runtime/settings.json`
 - **Edit mode** — switch between full / upload-only / readonly at runtime
@@ -81,10 +81,6 @@ By default MCP endpoints are open. To require a Bearer token on all MCP endpoint
 # Set at startup (overrides saved setting)
 .venv/bin/python app/manager.py --host 0.0.0.0 --mcp-token mysecrettoken123
 
-# Or via environment variable
-export MCP_BEARER_TOKEN=mysecrettoken123
-.venv/bin/python app/manager.py --host 0.0.0.0
-
 # Lock so the token cannot be changed via the web UI
 .venv/bin/python app/manager.py --host 0.0.0.0 --mcp-token mysecrettoken123 --no-token-edit
 ```
@@ -114,7 +110,7 @@ In OpenWebUI, set the token as Bearer token when adding the MCP connection. In C
 |---|---|
 | `MCP_MANAGER_PASSWORD` | Plain-text password — hashed with SHA-256 at startup |
 | `MCP_MANAGER_PASSWORD_HASH` | Pre-hashed SHA-256 hex digest (takes precedence) |
-| `MCP_BEARER_TOKEN` | Bearer token for all MCP endpoints |
+| `MCP_BEARER_TOKEN` | Bearer token for MCP endpoints when starting runner/server components directly. With `app/manager.py`, use `--mcp-token` or the Settings page. |
 
 When auth is active:
 - The web UI shows a login screen. The password is verified against a protected endpoint (`GET /api/auth-check`) — wrong passwords are rejected immediately.
@@ -151,6 +147,7 @@ When auth is active:
 |---|---|---|
 | `GET` | `/api/auth-status` | Returns `{"auth_enabled": bool, "edit_mode": "full"\|"upload"\|"readonly"}` |
 | `GET` | `/api/instances` | Instance list (status, URLs) |
+| `GET` | `/api/instances/{id}` | Single instance status and URL |
 | `GET` | `/api/tools/template` | Starter template for the editor |
 
 ---
