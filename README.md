@@ -2,7 +2,7 @@
 
 A local-first manager for running OpenWebUI-compatible tool JSONs as [Model Context Protocol](https://modelcontextprotocol.io) servers.
 
-Upload a tool export, install dependencies, start an MCP server, and expose it via Streamable HTTP for OpenWebUI, Claude Code, Codex, or any MCP client. A maintained OpenHAB integration is included to expose your smart home as a local MCP server.
+Upload a tool export, install dependencies, start an MCP server, and expose it via Streamable HTTP for OpenWebUI, Claude Code, Codex, or any MCP client. A maintained OpenHAB integration is included to expose your smart home as a local MCP server: [openhab-ai-integration](https://github.com/torfeu/openhab-ai-integration).
 
 ---
 
